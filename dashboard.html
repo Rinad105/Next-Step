@@ -1,0 +1,242 @@
+<html>
+<head>
+<title>Dashboard - NextStep</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a href="#" id="dashboardHome">
+    <img src="logo.png" alt="NextStep Logo" class="logo">
+  </a>
+  <h1 id="dashboardTitle" style="cursor:pointer;">NextStep</h1>
+</header>
+
+<div style="display:flex; justify-content: flex-end; align-items:center; max-width:900px; margin:15px auto;">
+  <button id="bookmarkBtn" class="btn" style="margin-right:10px; display:none;">My Bookmarks</button>
+  <button id="addBtn" class="btn" style="margin-right:10px; display:none;">Add</button>
+  <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+</div>
+
+<section class="dashboard">
+  <h2 id="welcome"></h2>
+  <div id="userSection"></div>
+</section>
+
+<script>
+const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+if (!currentUser) window.location.href = "login.html";
+
+document.getElementById("welcome").textContent = `Welcome, ${currentUser.name}`;
+
+let events = JSON.parse(localStorage.getItem("events")) || [];
+let bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
+
+function saveEvents() {
+  localStorage.setItem("events", JSON.stringify(events));
+}
+
+function saveBookmarks() {
+  localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
+}
+
+function createCard(event) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <h3>${event.name}</h3>
+    ${event.image ? `<img src="${event.image}" style="width:100%; border-radius:15px; margin-top:10px;">` : ""}
+    <p><strong>By:</strong> ${event.creator}</p>
+    <p><strong>Subject:</strong> ${event.subject}</p>
+    <p><strong>Mode:</strong> ${event.mode}</p>
+    <p><strong>Location:</strong> ${event.location || "online"}</p>
+    <p><strong>Date:</strong> ${event.start} - ${event.end}</p>
+    <p><strong>Time:</strong> ${event.time}</p>
+    ${event.details ? `<p style="margin-top:10px;">${event.details}</p>` : ""}
+    ${event.link ? `<a href="${event.link}" target="_blank">Register Here</a>` : ""}
+  `;
+
+  if (currentUser.type === "user") {
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.style.marginTop = "10px";
+
+    function updateButton() {
+      if (bookmarks.includes(event.id)) {
+        btn.textContent = "Remove Bookmark";
+      } else {
+        btn.textContent = "Bookmark";
+      }
+    }
+
+    btn.onclick = function () {
+      if (bookmarks.includes(event.id)) {
+        bookmarks = bookmarks.filter(id => id !== event.id);
+      } else {
+        bookmarks.push(event.id);
+      }
+
+      saveBookmarks();
+      updateButton();
+
+      const bookmarkBtn = document.getElementById("bookmarkBtn");
+      if (bookmarkBtn && bookmarkBtn.dataset.active === "true") {
+        showBookmarksOnly();
+      }
+    };
+
+    updateButton();
+    card.appendChild(btn);
+  }
+
+  return card;
+}
+
+function renderEventList(list) {
+  const container = document.getElementById("eventList");
+  if (!container) return;
+  container.innerHTML = "";
+  list.forEach(event => container.appendChild(createCard(event)));
+}
+
+function loadUserView(container) {
+  container.innerHTML = `
+    <input type="text" id="search" placeholder="Search..." style="margin-bottom:20px;padding:10px; width:100%; max-width:400px; border-radius:5px; border:1px;">
+    <div id="eventList"></div>
+  `;
+
+  document.getElementById("search").addEventListener("input", function () {
+    const query = this.value.toLowerCase();
+    const filtered = events.filter(event =>
+      event.name.toLowerCase().includes(query) ||
+      event.subject.toLowerCase().includes(query) ||
+      event.creator.toLowerCase().includes(query) ||
+      (event.location && event.location.toLowerCase().includes(query))
+    );
+    renderEventList(filtered);
+  });
+
+  renderEventList(events);
+}
+
+function loadPublisherView(container) {
+  container.innerHTML = `
+    <div id="publisherFormContainer" style="display:none;">
+      <form id="addEventForm">
+        <input type="text" id="eventName" placeholder="Event Name" required>
+        <input type="date" id="startDate" required>
+        <input type="date" id="endDate" required>
+        <input type="time" id="time" required>
+        <input type="text" id="mode" placeholder="Online / Offline" required>
+        <input type="text" id="location" placeholder="Location">
+        <input type="text" id="subject" placeholder="Subject" required>
+        <input type="text" id="details" placeholder="Details">
+        <input type="text" id="link" placeholder="Registration Link">
+        <input type="file" id="image" accept="image/*">
+        <button type="submit" class="btn">Publish</button>
+      </form>
+    </div>
+    <h3 style="margin-top:40px;">Published Events</h3>
+    <div id="eventList"></div>
+  `;
+
+  document.getElementById("addEventForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const file = document.getElementById("image").files[0];
+    const reader = new FileReader();
+
+    reader.onload = function () {
+      const newEvent = {
+        id: Date.now(),
+        name: document.getElementById("eventName").value.trim(),
+        start: document.getElementById("startDate").value,
+        end: document.getElementById("endDate").value,
+        time: document.getElementById("time").value,
+        mode: document.getElementById("mode").value.trim(),
+        location: document.getElementById("location").value.trim(),
+        subject: document.getElementById("subject").value.trim(),
+        details: document.getElementById("details").value.trim(),
+        link: document.getElementById("link").value.trim(),
+        image: reader.result || "",
+        creator: currentUser.name
+      };
+
+      events.push(newEvent);
+      saveEvents();
+      renderEventList(events.filter(e => e.creator === currentUser.name));
+      document.getElementById("addEventForm").reset();
+      document.getElementById("publisherFormContainer").style.display = "none";
+    };
+
+    if (file) {
+      reader.readAsDataURL(file);
+    } else {
+      reader.onload();
+    }
+  });
+
+  renderEventList(events.filter(e => e.creator === currentUser.name));
+}
+
+function showBookmarksOnly() {
+  const container = document.getElementById("userSection");
+  container.innerHTML = `<div id="eventList"></div>`;
+  const saved = events.filter(event => bookmarks.includes(event.id));
+  renderEventList(saved);
+}
+
+function displayDashboard() {
+  const container = document.getElementById("userSection");
+  const addBtn = document.getElementById("addBtn");
+  const bookmarkBtn = document.getElementById("bookmarkBtn");
+
+  if (currentUser.type === "user") {
+    bookmarkBtn.style.display = "inline-block";
+    loadUserView(container);
+
+    bookmarkBtn.addEventListener("click", function () {
+      showBookmarksOnly();
+    });
+
+  } else {
+    addBtn.style.display = "inline-block";
+    loadPublisherView(container);
+
+    addBtn.addEventListener("click", function () {
+      const form = document.getElementById("publisherFormContainer");
+      if (form.style.display === "none") {
+        form.style.display = "block";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        form.style.display = "none";
+      }
+    });
+  }
+}
+
+function goToDashboardHome(e) {
+  if (e) e.preventDefault();
+
+  if (currentUser.type === "user") {
+    loadUserView(document.getElementById("userSection"));
+  } else {
+    loadPublisherView(document.getElementById("userSection"));
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+document.getElementById("dashboardHome").addEventListener("click", goToDashboardHome);
+document.getElementById("dashboardTitle").addEventListener("click", goToDashboardHome);
+
+document.getElementById("logoutBtn").addEventListener("click", function () {
+  localStorage.removeItem("currentUser");
+  window.location.href = "index.html";
+});
+
+displayDashboard();
+</script>
+
+</body>
+</html>

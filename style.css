@@ -1,0 +1,128 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #c0c8d9;
+  color: #160b33;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  padding: 15px 30px;
+  background: #606c8b;
+  border-bottom: 1px solid #000;
+  box-shadow: 0 2px 5px #160b33;
+}
+
+.logo {
+  height: 50px;
+  margin-right: 15px;
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.hero {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+}
+
+.hero-content {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 50px;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px #160b33;
+}
+
+.btn {
+  background: #fff;
+  color: #160b33;
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #bbbafa;
+}
+
+.form-section {
+  max-width: 400px;
+  margin: 50px auto;
+  background: #fff;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px #160b33;
+  text-align: center;
+}
+
+.form-section input,
+.form-section select {
+  width: 90%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+.dashboard {
+  max-width: 900px;
+  margin: 20px auto;
+  text-align: center;
+}
+
+.card {
+  background: #ffffff5e;
+  padding: 15px;
+  margin: 15px auto;
+  border-radius: 30px;
+  box-shadow: 0 5px 15px #160b33;
+  text-align: left;
+  width: 70%;
+  max-width: 700px;
+}
+
+.card a {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: bold;
+  color: #160b33;
+}
+
+@media (max-width: 600px) {
+  .hero-content,
+  .form-section,
+  .card {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .site-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .logo {
+    margin-bottom: 10px;
+  }
+}
+
+#publisherFormContainer form input,
+#publisherFormContainer form select,
+#publisherFormContainer form button {
+  width: 90%;
+  margin: 10px auto;
+  display: block;
+}
+
+#publisherFormContainer form button {
+  margin-top: 20px;
+}
